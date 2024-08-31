@@ -4,7 +4,7 @@ This repository is designed to help you automate topping up your Internet Comput
 
 ### Getting Setup:
 
-You will need DFX and NodeJS setup to use this repo. This project uses the Azle developent kit. If you need help getting setup, check out these links:
+You will need to have DFX and NodeJS set up to use this repo. This project uses the Azle development kit from Demergent Labs. If you need help getting setup, check out these links:
 
 DFX Setup: https://internetcomputer.org/docs/current/developer-docs/getting-started/install
 NodeJS Setup: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
