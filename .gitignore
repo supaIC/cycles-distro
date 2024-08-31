@@ -2,3 +2,4 @@
 node_modules
 target
 .azle
+canister_ids.json

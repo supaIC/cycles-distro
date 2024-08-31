@@ -1,14 +1,14 @@
 ## Cycles Distrobution
-### Version 1.2.6
-
+### Version 1.3.4
 This repository is designed to help you automate topping up your Internet Computer canisters by launching your own cycles distrobution smart contract. Just clone this repo and follow the steps below to get started!
 
 ### Getting Setup:
 
-You will need DFX and NodeJS setup to use this repo. If you need help getting setup, check out these links:
+You will need DFX and NodeJS setup to use this repo. This project uses the Azle developent kit. If you need help getting setup, check out these links:
 
-DFX Setup: // TBA
-NodeJS Setup // TBA
+DFX Setup: https://internetcomputer.org/docs/current/developer-docs/getting-started/install
+NodeJS Setup: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+Azle Docs: https://github.com/demergent-labs/azle
 
 #### Clone The Repo:
 
@@ -38,7 +38,7 @@ dfx stop
 
 ### Managing The Distro Canister
 
-Now that you have your project setup initially, it's time to populate your list of canisters that need cycles distrobution. The canister comes with an empty list of canister addresses that only the owner can manage. You can do that by utilizing following functions:
+Now that you have your project setup initially, it's time to populate your list of canisters that need cycles distrobution. The canister comes with an empty list of canister addresses that only the owner can manage. You can do that by utilizing the following functions:
 
 #### Read Distro List:
 
@@ -86,8 +86,9 @@ Note: `<bigint>` refers to a number representing the amount of cycles to the exa
 
 If you have a cycles wallet configured with your identity in DFX, you can launch your distrobution canister to the mainnet. This can be done by letting DFX create a new canister for you.
 
-Todo:
+### Future Plans:
 
-- Let the canister receive a json list of all canisters in need of cycles.
-- Permission canister to only be able to top up using that list.
-- Create autonomous mode and manual mode.
+- Multiple modes (automatic, timed, manual)
+- Accept json list as an option for setup
+- Role support (admin/owner).
+- Embedded frontend.

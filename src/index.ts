@@ -1,83 +1,92 @@
-import { ok } from 'assert';
-import { blob, nat, int, Principal, $query, $update, $init, ic, Variant, Record, Result, match } from 'azle';
-import { CanisterStatus, managementCanister } from 'azle/canisters/management';
-import {
-    CanisterStatusArgs,
-    CanisterStatusResult,
-    CreateCanisterResult
-} from 'azle/canisters/management';
+import { Principal, $query, $update, $init, ic, Result, match, Vec } from 'azle';
+import { managementCanister } from 'azle/canisters/management';
 
-const canisterList: Array<string> = ["zks6t-giaaa-aaaap-qb7fa-cai", "qehbq-rqaaa-aaaan-ql2iq-cai"];
+// Defines the type for the internal canister list.
+export type DistroList = Vec<string>;
 
+// Defines the internal state variables (not stable memory).
+let owner: string = "";
+const distroList: DistroList = [];
+
+// Sets the canister owner on initialization.
+$init
+export function init(): void {
+    owner = ic.caller().toText();
+}
+
+// Grab the list of canisters that are to receive cycles.
+$query
+export async function canisterList(): Promise<DistroList> {
+    if (ic.caller().toText() === owner) {
+        return distroList;
+    } else {
+        return ["Only the owner can view the canister list."];
+    }
+}
+
+// Adds a canister to the distrobution list.
+$update
+export async function addCanister(canisterID: string): Promise<string> {
+    if (ic.caller().toText() !== owner) {
+        return "Only the owner can add canisters.";
+    } else {
+        distroList.push(canisterID);
+        return "Canister added.";
+    }
+}
+
+// Removes a canister from the distrobution list.
+$update
+export async function removeCanister(canisterID: string): Promise<string> {
+    if (ic.caller().toText() !== owner) {
+        return "Only the owner can remove canisters.";
+    } else {
+        const index = distroList.indexOf(canisterID);
+        if (index > -1) {
+            distroList.splice(index, 1);
+            return "Canister removed.";
+        } else {
+            return "Canister not found.";
+        }
+    }
+}
+
+// Manually adds cycles to a single specific canister of choice.
 $update;
-export async function addCycles(amount: bigint): Promise<Result<boolean, string>> {
-    const callResult = await managementCanister
+export async function addCycles(canisterID: string, amount: bigint): Promise<Result<boolean, string>> {
+    if (ic.caller().toText() !== owner) {
+        return { Err: "Only the owner can add cycles." };
+    } else {
+        const callResult = await managementCanister
         .deposit_cycles({
-            canister_id: Principal.from("zks6t-giaaa-aaaap-qb7fa-cai"),
+            canister_id: Principal.from(canisterID),
         })
         .cycles(amount)
         .call();
 
-    return match(callResult, {
-        Ok: () => ({ Ok: true }),
-        Err: (err) => ({ Err: err })
-    });
+        return match(callResult, {
+            Ok: () => ({ Ok: true }),
+            Err: (err) => ({ Err: err })
+        });
+    }
 }
 
+// amount means total number of cycles, this needs to be equally divided among all canisters.
 $update;
-export async function addCyclesToAll(amount: bigint): Promise<Balances> {
-    const canisterCount = canisterList.length;
-    const topUpAmount = amount / BigInt(canisterCount);
-    for (const canisterId of canisterList) {
-        const callResult = await managementCanister
+export async function addCyclesToAll(amount: bigint): Promise<string> {
+    if (ic.caller().toText() !== owner) {
+        return "Only the owner can add cycles.";
+    } else {
+        const listLength = distroList.length;
+        const cyclesPerCanister = amount / BigInt(listLength);
+        distroList.forEach(async (canisterID) => {
+            const callResult = await managementCanister
             .deposit_cycles({
-                canister_id: Principal.from(canisterId),
+                canister_id: Principal.from(canisterID),
             })
-            .cycles(topUpAmount)
+            .cycles(cyclesPerCanister)
             .call();
+        });
+        return "Cycles added to all canisters.";
     }
-    try {
-        const balances = await getBalances();
-        return {assets: balances.Ok?.assets!, frontend: balances.Ok?.frontend!};
-    } catch (error) {
-        return {assets: BigInt(0), frontend: BigInt(0)};
-    }
-}
-
-// Expose self cycles balance publicly.
-
-$update;
-export async function getCanisterStatus(): Promise<Result<string, string>> {
-    const canisterStatusResultCallResult = await managementCanister
-        .canister_status({
-            canister_id: Principal.from("jeb4e-myaaa-aaaak-aflga-cai")
-        })
-        .call();
-
-    return match(canisterStatusResultCallResult, {
-        Ok: (canisterStatusResult) => ({ Ok: canisterStatusResult.cycles.toString() }),
-        Err: (err) => ({ Err: err })
-    });
-}
-
-export type Balances = Record<{
-    assets: bigint;
-    frontend: bigint;
-}>;
-
-// Due to the nature of cycles balances being private outside of the controllers, all canisters that are to be pumped up with cycles using this distro
-// are to have this distro canister as a conrtoller. This is to enable the distro canister to be able to read the cycles balance of the canisters.
-$update;
-export async function getBalances() : Promise<Result<Balances, string>> {
-    const balanceList: Array<bigint> = [];
-    for (const canisterId of canisterList) {
-        const canisterStatusResultCallResult = await managementCanister
-            .canister_status({
-                canister_id: Principal.from(canisterId)
-            })
-            .call();
-        balanceList.push(canisterStatusResultCallResult.Ok?.cycles!);
-    }
-    const balances: Balances = {assets: balanceList[0], frontend: balanceList[1]};
-    return {Ok: balances};
 }
