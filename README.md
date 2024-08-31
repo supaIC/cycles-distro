@@ -84,7 +84,15 @@ Note: `<bigint>` refers to a number representing the amount of cycles to the exa
 
 #### Deploy To Mainnet
 
-If you have a cycles wallet configured with your identity in DFX, you can launch your distrobution canister to the mainnet. This can be done by letting DFX create a new canister for you.
+Note: This package currently doesn't support topping up on local deployment, there are plans for this in the future. For now, please deploy to the mainnet.
+
+If you have a cycles wallet configured with your identity in DFX, you can launch your distrobution canister to the mainnet. This can be done by letting DFX create a new canister for you using:
+
+```
+dfx deploy --network ic
+```
+
+After deployment, when you call the functions make sure to add `--network ic` after `dfx canister` so that your call reaches your mainnet version.
 
 ### Future Plans:
 
@@ -92,3 +100,4 @@ If you have a cycles wallet configured with your identity in DFX, you can launch
 - Accept json list as an option for setup
 - Role support (admin/owner).
 - Embedded frontend.
+- Local DFX environment support.
